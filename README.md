@@ -1,6 +1,15 @@
 # HA Appie (Home Assistant) · [English below](#english)
 
-Toont de status van je **Albert Heijn-bezorging** in Home Assistant en laat je er meldingen en automations op maken: *"de bezorger komt eraan"* (aankomsttijd bekend) en *"bezorgd"*.
+Een Home Assistant-integratie voor **Albert Heijn** die veel meer doet dan bezorgmeldingen. Je bedient je boodschappen vanuit je dashboard:
+
+- 🚚 **Bezorging:** status van je bezorging, je bezorgslot en een event voor meldingen (*"de bezorger komt eraan"*, *"bezorgd"*).
+- 🛒 **Boodschappenlijst:** je AH-lijst als to-do in HA. Toevoegen, afvinken en verwijderen werkt twee kanten op, en tekst als `courgette` of `2 melk` wordt vanzelf het juiste AH-product.
+- 🔁 **Vaste producten:** een weeklijstje van wat je steeds bestelt, met per product een aantal dat je kunt aanpassen en één knop om alles op de lijst te zetten.
+- 🍝 **Recepten:** sla recepten op (typ ze in een formulier of plak ze), kies ze in een dropdown, stel het aantal personen in en zet het hele recept met één knop op je lijst. Hoeveelheden worden omgerekend naar verpakkingen, ingrediënten zoeken zelf het beste AH-product, en je kunt per ingrediënt een product vastzetten of een eigen vertaallijst gebruiken.
+- 🔎 **Producten zoeken:** typ een zoekwoord en kies uit de resultaten, met verpakkingsgrootte, prijs, bonusmarkering en prijs per kg of liter.
+- 🧾 **Overig:** winkelmand, inhoud van je bestelling, kassabonnen uit de winkel en je persoonlijke Bonus-aanbiedingen.
+
+Alles is bedoeld om in een eigen dashboard te gebruiken (bijvoorbeeld in een pop-up), zodat je met een paar tikken boodschappen doet.
 
 > ⚠️ **Onofficieel.** Albert Heijn heeft geen publieke API. Deze integratie gebruikt dezelfde API als de AH-app, alleen voor jouw eigen account (hij leest je bestellingen en schrijft alleen naar je boodschappenlijst). AH kan dit op elk moment wijzigen of blokkeren, en het gebruik kan tegen hun voorwaarden zijn. Gebruik op eigen risico. Niet verbonden met of goedgekeurd door Albert Heijn.
 
@@ -31,7 +40,7 @@ Sla een recept op en zet het met één knop op je AH-boodschappenlijst, omgereke
 - Opslaan: actie `ha_appie.save_recipe` (Ontwikkelaarstools → Acties) met `name`, `persons` (voor hoeveel personen de hoeveelheden gelden) en `ingredients` (één per regel, bv. `400 g rundergehakt`; een recept van internet plakken mag).
 - Bediening (dropdown): kies het recept in de keuzelijst **Recept**; daaronder staan **Recept personen** (aanpassen herberekent alles), **Recept ingrediënten** (een lijst waarin je regels toevoegt, aanpast of verwijdert) en de knop **Recept op boodschappenlijst**. Opnieuw opslaan met dezelfde naam vervangt de ingrediënten en houdt het gekozen aantal personen.
 - Elk ingrediënt wordt het AH-product dat je waarschijnlijk bedoelt (eerder gekochte producten gaan voor); het aantal verpakkingen wordt omhoog afgerond op de verpakkingsgrootte (`600 g` met 500 g-verpakkingen = 2). Lepels, blikjes en ingrediënten zonder hoeveelheid worden 1 verpakking; niet gevonden = tekst op de lijst.
-- Productkeuze: een ingrediënt wordt alleen een AH-product als de productnaam er echt op eindigt (dus "pasta" wordt geen "pestosaus"); verkleinwoorden en meervouden worden herkend ("cherrytomaatjes" = "cherrytomaten"). Lukt dat niet, dan komt het als tekst op de lijst. Wil je zelf kiezen: zoek het product (Product zoeken), kies het ingrediënt bij **Recept ingrediënt kiezen** en druk op **Zoekresultaat vastzetten bij ingrediënt**. Een 📌 laat zien dat de keuze vaststaat.
+- Productkeuze: zie **Beste overeenkomst** hieronder. Verkleinwoorden en meervouden worden herkend ("cherrytomaatjes" = "cherrytomaten"). Past er niets, dan komt het als tekst op de lijst. Wil je zelf kiezen: zoek het product (Product zoeken), kies het ingrediënt bij **Recept ingrediënt kiezen** en druk op **Zoekresultaat vastzetten bij ingrediënt**. Een 📌 laat zien dat de keuze vaststaat; met **Ingrediënt weer automatisch kiezen** haal je het weg.
 - Nieuw recept invullen in het dashboard: vul **Nieuw recept naam**, **Nieuw recept personen** en **Nieuw recept ingrediënten** in (met `;` tussen de regels, bijvoorbeeld `500 gr gehakt; 2 uien; 1 zak rijst`) en druk op **Nieuw recept opslaan**. Het recept wordt meteen geselecteerd en het formulier wordt leeg gemaakt. Meer ingrediënten voeg je daarna toe in de lijst **Recept ingrediënten**.
 - Beste overeenkomst: bij recepten kiest hij het product dat het meest op je ingrediënt lijkt ("lays paprika chips" wordt "Lay's Paprika"). Minstens 60% van je woorden moet in de naam staan, die woorden moeten bij elkaar staan en er mag niets achter komen ("Rode bieten met ui" is dus geen "rode ui", "Pasta Pestosaus" geen "pasta").
 - Typefouten en eigen vertalingen: kleine spelfouten worden vanzelf opgevangen ("cremé fraise" = "crème fraîche"). Lukt een woord toch niet, zet dan in de lijst **Vertaallijst** een regel als `cremé fraise = creme fraiche` (links wat je typt, rechts wat AH kent). Dat geldt voor recepten én voor slim toevoegen in de to-do. De lijst is persoonlijk en staat alleen in je eigen HA-opslag.
@@ -115,7 +124,16 @@ automation:
 
 ## English
 
-Shows the status of your **Albert Heijn home delivery** in Home Assistant, with a sensor, a time-slot and an event entity so you can notify yourself when an arrival time is known or the order is delivered.
+A Home Assistant integration for **Albert Heijn** that does far more than delivery notifications. Run your grocery shopping from your dashboard:
+
+- 🚚 **Delivery:** delivery status, your time slot and an event for notifications ("arrival time known", "delivered").
+- 🛒 **Shopping list:** your AH list as a to-do in HA. Add, tick off and remove; text like `courgette` or `2 melk` automatically becomes the right AH product.
+- 🔁 **Regular products:** a weekly list of what you keep ordering, an adjustable quantity per product and one button to put everything on the list.
+- 🍝 **Recipes:** store recipes (type them in a form or paste them), pick one from a dropdown, set the number of persons and put the whole recipe on your list with one button. Amounts are converted to pack counts, each ingredient finds the best AH product by itself, and you can pin a product per ingredient or keep a personal translation list.
+- 🔎 **Product search:** type a keyword and pick a result, with pack size, price, bonus marker and price per kg or litre.
+- 🧾 **Also:** basket, order contents, in-store receipts and your personal Bonus offers.
+
+Everything is meant to be used from your own dashboard (for example in a pop-up), so shopping takes a few taps.
 
 > ⚠️ **Unofficial.** AH has no public API. This uses the same API as the AH app, for your own account only (it reads your orders and only writes to your shopping list). It can break or be blocked at any time and may be against AH's terms. Use at your own risk. Not affiliated with Albert Heijn.
 
