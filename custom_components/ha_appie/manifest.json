@@ -1,0 +1,12 @@
+{
+  "domain": "ha_appie",
+  "name": "HA Appie",
+  "codeowners": ["@HazlittM"],
+  "config_flow": true,
+  "documentation": "https://github.com/HazlittM/ha_appie",
+  "integration_type": "service",
+  "iot_class": "cloud_polling",
+  "issue_tracker": "https://github.com/HazlittM/ha_appie/issues",
+  "requirements": [],
+  "version": "0.4.0"
+}

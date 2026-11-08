@@ -1,0 +1,142 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Log in to Albert Heijn",
+        "description": "1. Open [the AH login page]({login_url}) in a desktop browser with developer tools open (F12, Network tab, 'Preserve log' on).\n2. Log in. The browser cannot open the result, but the Network tab shows a redirect to `appie://login-exit?code=…`.\n3. Paste that whole line, or just the value after `code=`, below. The code is short-lived and works once.",
+        "data": {
+          "code": "Code or redirect URL"
+        }
+      },
+      "reauth_confirm": {
+        "title": "Log in again",
+        "description": "Your Albert Heijn login has expired. Repeat the steps with [the AH login page]({login_url}) and paste the code.",
+        "data": {
+          "code": "Code or redirect URL"
+        }
+      }
+    },
+    "error": {
+      "invalid_code": "Code rejected (expired or already used). Log in again for a new code.",
+      "cannot_connect": "Cannot connect to Albert Heijn."
+    },
+    "abort": {
+      "already_configured": "This account is already configured.",
+      "wrong_account": "This is a different AH account than the one configured.",
+      "reauth_successful": "Logged in again."
+    }
+  },
+  "entity": {
+    "sensor": {
+      "status": {
+        "name": "Status",
+        "state": {
+          "geen": "No delivery",
+          "gepland": "Planned",
+          "tijd_bekend": "Time known",
+          "bezorgd": "Delivered",
+          "geannuleerd": "Cancelled",
+          "onbekend": "Unknown"
+        }
+      },
+      "slot_start": {
+        "name": "Delivery slot start"
+      },
+      "slot_end": {
+        "name": "Delivery slot end"
+      },
+      "order_products": {
+        "name": "Products in order"
+      },
+      "basket": {
+        "name": "Basket"
+      },
+      "last_receipt": {
+        "name": "Last receipt"
+      },
+      "last_receipt_amount": {
+        "name": "Last receipt amount"
+      },
+      "spent_month": {
+        "name": "Spent in store this month"
+      },
+      "bonus_personal": {
+        "name": "Personal Bonus"
+      },
+      "bonus_previous": {
+        "name": "Bonus on previously bought"
+      }
+    },
+    "event": {
+      "delivery": {
+        "name": "Delivery",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "tijd_bekend": "Arrival time known",
+              "bezorgd": "Delivered",
+              "geannuleerd": "Cancelled"
+            }
+          }
+        }
+      }
+    },
+    "todo": {
+      "shopping_list": {
+        "name": "Shopping list"
+      }
+    },
+    "button": {
+      "add_regulars": {
+        "name": "Add regular products to shopping list"
+      },
+      "reset_quantities": {
+        "name": "Restore default quantities"
+      }
+    }
+  },
+  "services": {
+    "save_recipe": {
+      "name": "Save recipe",
+      "description": "Saves (or updates) a recipe. Each recipe gets a persons field and a button.",
+      "fields": {
+        "name": {
+          "name": "Name",
+          "description": "Recipe name"
+        },
+        "persons": {
+          "name": "Persons",
+          "description": "Number of persons the amounts are for"
+        },
+        "ingredients": {
+          "name": "Ingredients",
+          "description": "One per line, e.g. '400 g mince'. You can paste a recipe from the web."
+        }
+      }
+    },
+    "delete_recipe": {
+      "name": "Delete recipe",
+      "description": "Deletes a recipe and its entities.",
+      "fields": {
+        "name": {
+          "name": "Name",
+          "description": "Recipe name"
+        }
+      }
+    },
+    "add_recipe_to_list": {
+      "name": "Recipe to shopping list",
+      "description": "Puts the recipe (scaled to persons) on the AH shopping list.",
+      "fields": {
+        "name": {
+          "name": "Name",
+          "description": "Recipe name"
+        },
+        "persons": {
+          "name": "Persons",
+          "description": "Empty = the configured number"
+        }
+      }
+    }
+  }
+}

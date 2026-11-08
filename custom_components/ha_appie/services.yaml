@@ -1,0 +1,40 @@
+save_recipe:
+  fields:
+    name:
+      required: true
+      example: Lasagne
+      selector:
+        text:
+    persons:
+      required: true
+      default: 4
+      selector:
+        number:
+          min: 1
+          max: 30
+          mode: box
+    ingredients:
+      required: true
+      example: "500 g rundergehakt\n2 uien\n1 pak lasagnebladen"
+      selector:
+        text:
+          multiline: true
+delete_recipe:
+  fields:
+    name:
+      required: true
+      selector:
+        text:
+add_recipe_to_list:
+  fields:
+    name:
+      required: true
+      selector:
+        text:
+    persons:
+      required: false
+      selector:
+        number:
+          min: 1
+          max: 30
+          mode: box

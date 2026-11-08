@@ -1,0 +1,142 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Inloggen bij Albert Heijn",
+        "description": "1. Open [de AH-inlogpagina]({login_url}) in een browser op je computer, met de ontwikkelaarstools open (F12, tabblad Netwerk, 'Logboek behouden' aan).\n2. Log in. De browser kan de uitkomst niet openen, maar in het Netwerk-tabblad staat een omleiding naar `appie://login-exit?code=…`.\n3. Plak hieronder die hele regel of alleen de waarde na `code=`. De code is maar kort geldig en werkt één keer.",
+        "data": {
+          "code": "Code of omleidings-URL"
+        }
+      },
+      "reauth_confirm": {
+        "title": "Opnieuw inloggen",
+        "description": "De inlog bij Albert Heijn is verlopen. Doe de stappen opnieuw met [de AH-inlogpagina]({login_url}) en plak de code.",
+        "data": {
+          "code": "Code of omleidings-URL"
+        }
+      }
+    },
+    "error": {
+      "invalid_code": "Code afgewezen (verlopen of al gebruikt). Log opnieuw in voor een nieuwe code.",
+      "cannot_connect": "Geen verbinding met Albert Heijn."
+    },
+    "abort": {
+      "already_configured": "Dit account is al ingesteld.",
+      "wrong_account": "Dit is een ander AH-account dan het account dat al is ingesteld.",
+      "reauth_successful": "Opnieuw ingelogd."
+    }
+  },
+  "entity": {
+    "sensor": {
+      "status": {
+        "name": "Status",
+        "state": {
+          "geen": "Geen bezorging",
+          "gepland": "Gepland",
+          "tijd_bekend": "Tijd bekend",
+          "bezorgd": "Bezorgd",
+          "geannuleerd": "Geannuleerd",
+          "onbekend": "Onbekend"
+        }
+      },
+      "slot_start": {
+        "name": "Begin bezorgslot"
+      },
+      "slot_end": {
+        "name": "Einde bezorgslot"
+      },
+      "order_products": {
+        "name": "Producten in bestelling"
+      },
+      "basket": {
+        "name": "Winkelmand"
+      },
+      "last_receipt": {
+        "name": "Laatste kassabon"
+      },
+      "last_receipt_amount": {
+        "name": "Bedrag laatste kassabon"
+      },
+      "spent_month": {
+        "name": "Uitgegeven in winkel deze maand"
+      },
+      "bonus_personal": {
+        "name": "Persoonlijke Bonus"
+      },
+      "bonus_previous": {
+        "name": "Bonus op eerder gekocht"
+      }
+    },
+    "event": {
+      "delivery": {
+        "name": "Bezorging",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "tijd_bekend": "Aankomsttijd bekend",
+              "bezorgd": "Bezorgd",
+              "geannuleerd": "Geannuleerd"
+            }
+          }
+        }
+      }
+    },
+    "todo": {
+      "shopping_list": {
+        "name": "Boodschappenlijst"
+      }
+    },
+    "button": {
+      "add_regulars": {
+        "name": "Voeg vaste producten toe aan boodschappenlijst"
+      },
+      "reset_quantities": {
+        "name": "Standaardaantallen herstellen"
+      }
+    }
+  },
+  "services": {
+    "save_recipe": {
+      "name": "Recept opslaan",
+      "description": "Slaat een recept op (of werkt het bij). Voor elk recept komen een aantal-personen-veld en een knop.",
+      "fields": {
+        "name": {
+          "name": "Naam",
+          "description": "Naam van het recept"
+        },
+        "persons": {
+          "name": "Personen",
+          "description": "Voor hoeveel personen de hoeveelheden gelden"
+        },
+        "ingredients": {
+          "name": "Ingrediënten",
+          "description": "Eén ingrediënt per regel, bv. '400 g gehakt'. Een recept van internet mag je gewoon plakken."
+        }
+      }
+    },
+    "delete_recipe": {
+      "name": "Recept verwijderen",
+      "description": "Verwijdert een recept en zijn entiteiten.",
+      "fields": {
+        "name": {
+          "name": "Naam",
+          "description": "Naam van het recept"
+        }
+      }
+    },
+    "add_recipe_to_list": {
+      "name": "Recept op boodschappenlijst",
+      "description": "Zet het recept (omgerekend naar het aantal personen) op de AH-boodschappenlijst.",
+      "fields": {
+        "name": {
+          "name": "Naam",
+          "description": "Naam van het recept"
+        },
+        "persons": {
+          "name": "Personen",
+          "description": "Leeg = het ingestelde aantal"
+        }
+      }
+    }
+  }
+}
