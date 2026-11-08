@@ -4,6 +4,8 @@ Toont de status van je **Albert Heijn-bezorging** in Home Assistant en laat je e
 
 > ⚠️ **Onofficieel.** Albert Heijn heeft geen publieke API. Deze integratie gebruikt dezelfde API als de AH-app, alleen voor jouw eigen account (hij leest je bestellingen en schrijft alleen naar je boodschappenlijst). AH kan dit op elk moment wijzigen of blokkeren, en het gebruik kan tegen hun voorwaarden zijn. Gebruik op eigen risico. Niet verbonden met of goedgekeurd door Albert Heijn.
 
+> ⚠️ **Nog niet getest:** de meldingen bij een bezorging (status `tijd_bekend`, `bezorgd`, `geannuleerd` en het event) zijn gebouwd maar nog niet met een echte bezorging geprobeerd. De rest (lijst, vaste producten, recepten, zoeken) is wel getest.
+
 ## Wat je krijgt
 
 | Entiteit | Betekenis |
@@ -116,6 +118,8 @@ automation:
 Shows the status of your **Albert Heijn home delivery** in Home Assistant, with a sensor, a time-slot and an event entity so you can notify yourself when an arrival time is known or the order is delivered.
 
 > ⚠️ **Unofficial.** AH has no public API. This uses the same API as the AH app, for your own account only (it reads your orders and only writes to your shopping list). It can break or be blocked at any time and may be against AH's terms. Use at your own risk. Not affiliated with Albert Heijn.
+
+> ⚠️ **Not yet tested:** delivery notifications (statuses `tijd_bekend`, `bezorgd`, `geannuleerd` and the event) are built but have not yet been tried with a real delivery. The rest (list, regular products, recipes, search) has been tested.
 
 **Entities (0.3 adds a weekly list of regular products with adjustable quantities, one button to add them to the shopping list, and smart matching of typed items ("courgette" becomes "AH Courgette"); 0.2 adds shopping list as a to-do, basket, order contents, in-store receipts and Bonus offers):** a status sensor (`geen`, `gepland`, `tijd_bekend`, `bezorgd`, `geannuleerd`, `onbekend`), delivery slot start/end timestamps, and an event entity firing on `tijd_bekend` (AH has an arrival estimate), `bezorgd` (delivered) and `geannuleerd` (cancelled).
 
