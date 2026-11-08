@@ -1,0 +1,86 @@
+# Voorbeeld-automations voor HA Appie / Example automations for HA Appie.
+# Pas de entiteiten en de notify-dienst aan. Adjust the entities and the notify service.
+# Entiteit-ID's zijn de standaardnamen; heet je apparaat anders, dan veranderen ze mee.
+
+# 1. Bezorgmelding: aankomsttijd bekend en bezorgd (één automation).
+- alias: Albert Heijn bezorging melding
+  description: Stuurt een melding zodra Albert Heijn een aankomsttijd heeft en zodra de boodschappen zijn bezorgd.
+  triggers:
+    - trigger: state
+      entity_id: sensor.ha_appie_status
+      to: tijd_bekend
+      not_from: [unavailable, unknown]
+      id: tijd_bekend
+    - trigger: state
+      entity_id: sensor.ha_appie_status
+      to: bezorgd
+      not_from: [unavailable, unknown]
+      id: bezorgd
+  actions:
+    - choose:
+        - conditions:
+            - condition: trigger
+              id: tijd_bekend
+          sequence:
+            - action: notify.mobile_app_JOUW_TELEFOON
+              data:
+                title: Albert Heijn
+                message: >-
+                  De bezorger komt eraan. Bezorgslot
+                  {{ as_local(states('sensor.ha_appie_begin_bezorgslot') | as_datetime(now())).strftime('%H:%M') }}
+                  - {{ as_local(states('sensor.ha_appie_einde_bezorgslot') | as_datetime(now())).strftime('%H:%M') }}.
+                data:
+                  tag: albert_heijn_bezorging
+        - conditions:
+            - condition: trigger
+              id: bezorgd
+          sequence:
+            - action: notify.mobile_app_JOUW_TELEFOON
+              data:
+                title: Albert Heijn
+                message: Je boodschappen zijn bezorgd.
+                data:
+                  tag: albert_heijn_bezorging
+  mode: queued
+  max: 3
+
+# 2. De dag voor de bezorging: vaste producten alvast op de lijst zetten.
+- alias: Albert Heijn vaste producten op de lijst
+  description: Zet de dag voor de bezorging je vaste producten op de AH-boodschappenlijst.
+  triggers:
+    - trigger: time
+      at: "18:00:00"
+  conditions:
+    - condition: template
+      value_template: >-
+        {% set start = states('sensor.ha_appie_begin_bezorgslot') | as_datetime(none) %}
+        {{ start is not none and (as_local(start).date() - now().date()).days == 1 }}
+  actions:
+    - action: button.press
+      target:
+        entity_id: button.ha_appie_voeg_vaste_producten_toe_aan_boodschappenlijst
+
+# 3. Een recept op de lijst zetten met een actie (bijvoorbeeld uit een script of een etiket/NFC-tag).
+- alias: Recept op de boodschappenlijst via tag
+  description: Zet een vast recept op de boodschappenlijst voor 4 personen.
+  triggers:
+    - trigger: tag
+      tag_id: JOUW_TAG_ID
+  actions:
+    - action: ha_appie.add_recipe_to_list
+      data:
+        name: Pasta pesto
+        persons: 4
+
+# 4. Spraak of een knop: product zoeken en meteen toevoegen kan met het slimme to-do.
+- alias: Melk toevoegen aan de lijst
+  description: Voorbeeld van slim toevoegen; "2 melk" wordt het juiste AH-product.
+  triggers:
+    - trigger: state
+      entity_id: input_button.melk_bijbestellen
+  actions:
+    - action: todo.add_item
+      target:
+        entity_id: todo.ha_appie_boodschappenlijst
+      data:
+        item: 2 melk

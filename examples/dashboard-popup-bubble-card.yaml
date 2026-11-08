@@ -1,0 +1,64 @@
+# Dezelfde bediening als pop-up met Bubble Card (HACS, https://github.com/Clooos/Bubble-Card).
+# Zet bij een knop of kaart een navigatie naar #boodschappen om hem te openen.
+# The same controls as a Bubble Card pop-up. Navigate to #boodschappen to open it.
+type: custom:bubble-card
+card_type: pop-up
+hash: "#boodschappen"
+name: Boodschappen
+icon: mdi:cart
+cards:
+  - type: custom:bubble-card
+    card_type: button
+    button_type: state
+    entity: button.ha_appie_voeg_vaste_producten_toe_aan_boodschappenlijst
+    name: Vaste producten op lijst
+    icon: mdi:cart-plus
+    tap_action:
+      action: perform-action
+      perform_action: button.press
+      target:
+        entity_id: button.ha_appie_voeg_vaste_producten_toe_aan_boodschappenlijst
+  - type: entities
+    title: Aantal per product (0 = deze week overslaan)
+    show_header_toggle: false
+    entities:
+      - number.ha_appie_ah_bananen_tros
+      - number.ha_appie_ah_halfvolle_melk
+  - type: custom:bubble-card
+    card_type: separator
+    name: Recepten
+    icon: mdi:chef-hat
+  - type: entities
+    title: Recept
+    show_header_toggle: false
+    entities:
+      - {entity: select.ha_appie_recept, name: Kies recept}
+      - {entity: number.ha_appie_recept_personen, name: Aantal personen}
+      - {entity: button.ha_appie_recept_op_boodschappenlijst, name: Op boodschappenlijst, secondary_info: none}
+  - type: entities
+    title: Nieuw recept
+    show_header_toggle: false
+    entities:
+      - {entity: text.ha_appie_nieuw_recept_naam, name: Naam}
+      - {entity: number.ha_appie_nieuw_recept_personen, name: Personen}
+      - {entity: text.ha_appie_nieuw_recept_ingredienten, name: Ingrediënten (met ; ertussen)}
+      - {entity: button.ha_appie_nieuw_recept_opslaan, name: Recept opslaan}
+  - type: todo-list
+    entity: todo.ha_appie_recept_ingredienten
+    title: Ingrediënten van het gekozen recept
+  - type: custom:bubble-card
+    card_type: separator
+    name: Product zoeken
+    icon: mdi:magnify
+  - type: entities
+    title: Product zoeken
+    show_header_toggle: false
+    entities:
+      - {entity: text.ha_appie_zoek_product, name: Zoekwoord (Enter)}
+      - {entity: select.ha_appie_zoekresultaat, name: Kies product}
+      - {entity: number.ha_appie_zoek_aantal, name: Aantal}
+      - {entity: button.ha_appie_zoekresultaat_toevoegen, name: Toevoegen aan lijst}
+  - type: todo-list
+    entity: todo.ha_appie_vertaallijst
+    title: Vertaallijst (bv. cremé fraise = creme fraiche)
+    hide_completed: false
