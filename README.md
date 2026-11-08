@@ -22,13 +22,21 @@ Daarna: *Instellingen → Apparaten & diensten → Integratie toevoegen → HA A
 
 ## Inloggen (eenmalig)
 
-AH laat alleen inloggen via de app-omleiding, dus dit gaat met een code:
+AH laat inloggen met een app-omleiding toe die een gewone browser niet kan afhandelen. Daarom log je in via een browser en geef je Home Assistant een code door. Het kost een paar minuten, je doet het één keer (en opnieuw als AH je uitlogt).
 
-1. Open de link uit het configuratiescherm in een browser **op een computer**, met de ontwikkelaarstools open (F12 → *Netwerk*, *Logboek behouden* aan).
-2. Log in bij AH. Daarna probeert de browser `appie://login-exit?code=…` te openen; dat lukt niet, maar de aanvraag staat in het Netwerk-tabblad.
-3. Plak de hele URL (of alleen de waarde na `code=`) in het scherm. De code is kort geldig en werkt één keer.
+**Wat je nodig hebt:** een computer (Chrome, Edge of Firefox; op een telefoon lukt het niet) en je AH-account.
 
-Je wachtwoord komt nooit in Home Assistant, alleen de tokens (in `.storage`). Adres, telefoonnummer en geboortedatum worden niet gelezen.
+1. **Start de installatie in Home Assistant.** Ga naar *Instellingen → Apparaten & diensten → Integratie toevoegen*, zoek op **HA Appie** en kies hem. Er opent een venster "Inloggen bij Albert Heijn" met een tekstveld "Code of omleidings-URL" en een link **de AH-inlogpagina**. Laat dit venster open staan.
+2. **Open de AH-inlogpagina op je computer.** Klik op die link (of kopieer hem naar je computerbrowser als je Home Assistant op een telefoon gebruikt). Er opent een nieuw tabblad met de inlogpagina van AH.
+3. **Zet de ontwikkelaarstools aan, vóór je inlogt.** Druk in dat AH-tabblad op **F12** (op een Mac: Cmd+Option+I). Aan de zijkant of onderkant opent een paneel. Klik op het tabblad **Netwerk** (Engels: *Network*) en zet het vinkje **Logboek behouden** (*Preserve log*) aan. Zonder dat vinkje verdwijnt het resultaat na het inloggen.
+4. **Log in bij AH** met je gewone e-mailadres en wachtwoord (of passkey), in dit tabblad. Dit gaat rechtstreeks naar AH; Home Assistant ziet je wachtwoord niet.
+5. **Zoek de code.** Na het inloggen lijkt er niets te gebeuren of er verschijnt een foutmelding. Dat is normaal: de browser probeert de AH-app te openen en dat lukt niet. Typ in het zoekveld ("Filter") van het Netwerk-paneel **`code=`**. Je ziet nu een regel met `login-exit?code=…` (vaak rood of "geannuleerd").
+6. **Kopieer hem.** Klik met de rechtermuisknop op die regel → *Kopiëren* → *URL kopiëren* (*Copy → Copy URL*). Lukt dat niet, klik de regel aan en kopieer bij *Headers* de waarde van `location` of de *Request URL*. Je hebt dan iets als `appie://login-exit?code=abc123…`. Alleen het stuk na `code=` plakken mag ook.
+7. **Plak het in Home Assistant** in het veld "Code of omleidings-URL" en kies *Verzenden*. Doe dit meteen: de code is maar kort geldig en werkt één keer.
+
+Klaar: de integratie maakt de apparaten en entiteiten aan. Krijg je "Code afgewezen"? Dan was de code verlopen of al gebruikt: begin opnieuw bij stap 2 voor een nieuwe code.
+
+Je wachtwoord komt nooit in Home Assistant, alleen de tokens (in `.storage`). Adres, telefoonnummer en geboortedatum worden niet gelezen. Is je inlog later verlopen, dan vraagt Home Assistant zelf om opnieuw in te loggen met dezelfde stappen.
 
 ## Entiteiten
 
@@ -117,7 +125,16 @@ A Home Assistant integration for **Albert Heijn** that does far more than delive
 
 **Install:** HACS → ⋮ → *Custom repositories* → `https://github.com/HazlittM/ha_appie` (type *Integration*) → install → restart. Or copy `custom_components/ha_appie`. Then *Settings → Devices & services → Add integration → HA Appie*.
 
-**Login (once):** AH only allows logging in via the app redirect. Open the link from the config screen in a desktop browser with developer tools open (F12 → *Network*, *Preserve log*), log in, find the request to `appie://login-exit?code=…` and paste the whole URL (or the value after `code=`). The code is short-lived and single-use. Your password never reaches Home Assistant, only the tokens. Address, phone number and date of birth are not read.
+**Login (once):** AH uses an app redirect that a normal browser cannot handle, so you log in in a browser and hand Home Assistant a code. You need a computer (Chrome, Edge or Firefox; a phone does not work).
+1. In Home Assistant: *Settings → Devices & services → Add integration → HA Appie*. A dialog "Inloggen bij Albert Heijn" opens with a field "Code of omleidings-URL" and a link to the AH login page. Keep it open.
+2. Open that link in a browser on your computer.
+3. **Before logging in,** press **F12** (Mac: Cmd+Option+I), open the **Network** tab and tick **Preserve log**.
+4. Log in to AH in that tab. Your password goes straight to AH, not to Home Assistant.
+5. After login nothing seems to happen, or you see an error: that is normal, the browser tries to open the AH app. Type **`code=`** in the Network filter box and look for a request `login-exit?code=…` (often red or "cancelled").
+6. Right-click it → *Copy → Copy URL* (or copy the `location` header from *Headers*). You get `appie://login-exit?code=abc123…`; only the part after `code=` also works.
+7. Paste it in the Home Assistant dialog and submit straight away: the code is short-lived and single-use. "Code afgewezen" means it expired or was used: repeat from step 2.
+
+Only tokens are stored (in `.storage`); address, phone number and date of birth are not read. If your login expires later, Home Assistant asks you to log in again with the same steps.
 
 **Entities:** see the table in the Dutch section; IDs are the defaults (`…ha_appie_…`). Ticking off a to-do item **removes** it (AH has no "ticked"). Receipts, basket and Bonus refresh every 30 minutes; status every minute on a delivery day, otherwise every 15 minutes.
 
