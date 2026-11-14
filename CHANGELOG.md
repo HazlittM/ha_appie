@@ -3,6 +3,9 @@
 Nieuwste bovenaan. Bij elke nieuwe versie: regel toevoegen, `version` in `manifest.json` ophogen en de README bijwerken zodat die alleen beschrijft wat er nú in zit.
 Newest first. For every release: add an entry, bump `version` in `manifest.json` and update the README so it only describes what is in the integration now.
 
+## Onbeperkt / unreleased (documentatie)
+- README: bezorgmeldingen getest met een echte bezorging; voorbeeld-automation meldt `tijd_bekend` pas om 07:30 en met neutrale tekst. De exacte aankomsttijd is niet via de API beschikbaar.
+
 ## 0.4.0
 - Recepten: opslaan (formulier of actie), kiezen in een dropdown, aantal personen, op de AH-lijst met verpakkingen naar boven afgerond, ingrediënten bewerken, product vastzetten per ingrediënt, vertaallijst.
 - Producten zoeken met prijs, bonus en prijs per kg/liter.

@@ -22,11 +22,22 @@
             - condition: trigger
               id: tijd_bekend
           sequence:
+            # De status komt al 's nachts; wacht tot 07:30 met melden.
+            - if:
+                - condition: time
+                  before: '07:30:00'
+              then:
+                - wait_for_trigger:
+                    - trigger: time
+                      at: '07:30:00'
+            - condition: state
+              entity_id: sensor.ha_appie_status
+              state: tijd_bekend
             - action: notify.mobile_app_JOUW_TELEFOON
               data:
                 title: Albert Heijn
                 message: >-
-                  De bezorger komt eraan. Bezorgslot
+                  Bezorgslot staat vast:
                   {{ as_local(states('sensor.ha_appie_begin_bezorgslot') | as_datetime(now())).strftime('%H:%M') }}
                   - {{ as_local(states('sensor.ha_appie_einde_bezorgslot') | as_datetime(now())).strftime('%H:%M') }}.
                 data:

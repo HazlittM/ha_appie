@@ -11,7 +11,7 @@ Een Home Assistant-integratie voor **Albert Heijn** die veel meer doet dan bezor
 
 > ⚠️ **Onofficieel.** Albert Heijn heeft geen publieke API. Deze integratie gebruikt dezelfde API als de AH-app, alleen voor jouw eigen account (hij leest je bestellingen en schrijft alleen naar je boodschappenlijst). AH kan dit op elk moment wijzigen of blokkeren, en het gebruik kan tegen hun voorwaarden zijn. Gebruik op eigen risico. Niet verbonden met of goedgekeurd door Albert Heijn.
 
-> ⚠️ **Nog niet getest:** de meldingen bij een bezorging (status `tijd_bekend`, `bezorgd`, `geannuleerd` en het event) zijn gebouwd maar nog niet met een echte bezorging geprobeerd. De rest is wel getest.
+> ℹ️ **Getest met een echte bezorging (13-11-2026):** de statussen `tijd_bekend` en `bezorgd`. Nog niet getest: `geannuleerd`. Let op: `tijd_bekend` komt al 's nachts, zodra het bezorgslot vaststaat, niet pas als de bezorger onderweg is. De nauwkeurige aankomsttijd (bv. 10:30–11:00) uit de AH-app is niet via de API te lezen; `eta_estimated` blijft leeg.
 
 ## Installeren
 
@@ -121,7 +121,7 @@ A Home Assistant integration for **Albert Heijn** that does far more than delive
 
 > ⚠️ **Unofficial.** AH has no public API. This uses the same API as the AH app, for your own account only (it reads your orders and only writes to your shopping list). It can break or be blocked at any time and may be against AH's terms. Use at your own risk. Not affiliated with Albert Heijn.
 
-> ⚠️ **Not yet tested:** delivery notifications (statuses `tijd_bekend`, `bezorgd`, `geannuleerd` and the event) are built but have not yet been tried with a real delivery. The rest has been tested.
+> ℹ️ **Tested with a real delivery (2026-11-13):** the statuses `tijd_bekend` and `bezorgd`. Not yet tested: `geannuleerd`. Note: `tijd_bekend` arrives at night as soon as the slot is fixed, not when the driver is on the way. The precise arrival time shown in the AH app (e.g. 10:30–11:00) cannot be read from the API; `eta_estimated` stays empty.
 
 **Install:** HACS → ⋮ → *Custom repositories* → `https://github.com/HazlittM/ha_appie` (type *Integration*) → install → restart. Or copy `custom_components/ha_appie`. Then *Settings → Devices & services → Add integration → HA Appie*.
 
