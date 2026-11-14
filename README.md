@@ -99,6 +99,8 @@ automation:
 ## Problemen
 
 - *"Code afgewezen"*: de code is verlopen of al gebruikt. Log opnieuw in en plak meteen.
+- *Tweestapsverificatie (2FA) aan op je AH-account*: het 2FA-scherm verschijnt heel even en crasht dan ("Application error: a client-side exception"). Er komt dan geen code. Zet 2FA in je AH-account tijdelijk uit, log in volgens de stappen hierboven en zet 2FA daarna direct weer aan. Home Assistant werkt verder met de opgeslagen sessie; alleen als AH je later uitlogt moet je dit herhalen.
+- *Ander account koppelen*: verwijder eerst de oude integratie en voeg dan de nieuwe toe. Andersom krijgen alle entiteiten `_2` achter hun naam en werken je dashboards en automations niet meer (terug te zetten via de entiteitsinstellingen).
 - Verandert AH de API, dan ziet Home Assistant een fout of lege status. Alle AH-specifieke code staat in `api.py` en `model.py`.
 - De exacte aankomsttijd uit de AH-melding ("tussen 10:20 en 10:50") is nog niet in de API gevonden. Je krijgt wel het bezorgslot en het moment dat AH een aankomsttijd *heeft* (`tijd_bekend`). Zie je in `eta_estimated` ooit een waarde, open dan een issue.
 
@@ -133,6 +135,8 @@ A Home Assistant integration for **Albert Heijn** that does far more than delive
 5. After login nothing seems to happen, or you see an error: that is normal, the browser tries to open the AH app. Type **`code=`** in the Network filter box and look for a request `login-exit?code=…` (often red or "cancelled").
 6. Right-click it → *Copy → Copy URL* (or copy the `location` header from *Headers*). You get `appie://login-exit?code=abc123…`; only the part after `code=` also works.
 7. Paste it in the Home Assistant dialog and submit straight away: the code is short-lived and single-use. "Code afgewezen" means it expired or was used: repeat from step 2.
+
+**Two-factor authentication (2FA) on your AH account:** the 2FA screen flashes briefly and then crashes ("Application error: a client-side exception"), so no code appears. Turn 2FA off in your AH account for a moment, log in with the steps above and turn 2FA back on right away. Home Assistant keeps using the stored session; you only repeat this if AH logs you out later. To switch to another account, remove the old integration first and then add the new one; otherwise every entity gets `_2` appended and your dashboards and automations break.
 
 Only tokens are stored (in `.storage`); address, phone number and date of birth are not read. If your login expires later, Home Assistant asks you to log in again with the same steps.
 
