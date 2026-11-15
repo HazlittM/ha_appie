@@ -38,3 +38,123 @@ add_recipe_to_list:
           min: 1
           max: 30
           mode: box
+save_receipt_pdf:
+  fields:
+    id:
+      default: latest
+      example: latest
+      selector:
+        text:
+    folder:
+      default: /media/ha_appie
+      selector:
+        text:
+save_invoice_pdf:
+  fields:
+    id:
+      default: latest
+      example: latest
+      selector:
+        text:
+    folder:
+      default: /media/ha_appie
+      selector:
+        text:
+get_receipt:
+  fields:
+    id:
+      default: latest
+      selector:
+        text:
+product_details:
+  fields:
+    product_id:
+      selector:
+        number:
+          min: 1
+          max: 99999999
+          mode: box
+    barcode:
+      example: "8710400000000"
+      selector:
+        text:
+search_products:
+  fields:
+    query:
+      required: true
+      example: halfvolle melk
+      selector:
+        text:
+    limit:
+      default: 12
+      selector:
+        number:
+          min: 1
+          max: 30
+          mode: box
+add_product:
+  fields:
+    product_id:
+      required: true
+      selector:
+        number:
+          min: 1
+          max: 99999999
+          mode: box
+    title:
+      selector:
+        text:
+    quantity:
+      default: 1
+      selector:
+        number:
+          min: 1
+          max: 50
+          mode: box
+search_recipes:
+  fields:
+    query:
+      required: true
+      example: pasta pesto
+      selector:
+        text:
+    limit:
+      default: 12
+      selector:
+        number:
+          min: 1
+          max: 30
+          mode: box
+get_recipe:
+  fields:
+    recipe_id:
+      required: true
+      selector:
+        number:
+          min: 1
+          max: 99999999
+          mode: box
+import_recipe:
+  fields:
+    recipe_id:
+      required: true
+      selector:
+        number:
+          min: 1
+          max: 99999999
+          mode: box
+    name:
+      selector:
+        text:
+add_to_favorites:
+  fields:
+    product_id:
+      required: true
+      selector:
+        number:
+          min: 1
+          max: 99999999
+          mode: box
+    list:
+      selector:
+        text:
