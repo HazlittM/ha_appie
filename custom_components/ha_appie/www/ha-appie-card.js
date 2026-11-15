@@ -1,6 +1,6 @@
-/* HA Appie card v0.5.0 - built into the HA Appie integration (no build step, no dependencies). */
+/* HA Appie card v0.5.1 - built into the HA Appie integration (no build step, no dependencies). */
 (() => {
-  const VERSION = "0.5.0";
+  const VERSION = "0.5.1";
   const DOMAIN = "ha_appie";
 
   // ---------------------------------------------------------------------------

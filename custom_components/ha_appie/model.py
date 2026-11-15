@@ -1030,32 +1030,38 @@ _ICON_LABELS = {
 }
 
 
+def _obj(value: Any) -> dict:
+    """AH sometimes answers a list where one object is expected (and the other way round): take the first."""
+    if isinstance(value, list):
+        value = next((v for v in value if isinstance(v, dict)), None)
+    return value if isinstance(value, dict) else {}
+
+
 def parse_product_graphql(data: dict | None, nutrition: dict | None = None) -> dict | None:
     """GraphQL product(id) (the app's FetchProductDetails) -> a compact summary for dashboards."""
-    p = (data or {}).get("product")
-    if not isinstance(p, dict) or p.get("id") is None:
+    p = _obj(_obj(data).get("product"))
+    if p.get("id") is None:
         return None
-    price = p.get("priceV2") or {}
+    price = _obj(p.get("priceV2"))
     now, was = _amount(price.get("now")), _amount(price.get("was"))
-    icons = [str(i) for i in p.get("icons") or [] if i]
+    icons = [str(i) for i in (p.get("icons") if isinstance(p.get("icons"), list) else []) if i]
     nutri = next((i.split("_", 1)[1] for i in icons if i.startswith("NUTRISCORE_")), None)
-    pack = p.get("imagePack") or {}
+    pack = _obj(p.get("imagePack"))
     image = None
     for size in ("medium", "large", "small"):
-        rend = pack.get(size)
-        if isinstance(rend, list):
-            rend = rend[0] if rend else None
-        if isinstance(rend, dict) and rend.get("url"):
+        rend = _obj(pack.get(size))
+        if rend.get("url"):
             image = rend["url"]
             break
-    trade = ((nutrition or {}).get("product") or {}).get("tradeItem") or {}
+    trade = _obj(_obj(_obj(nutrition).get("product")).get("tradeItem"))
     nutrients = []
-    for block in trade.get("nutritions") or []:
-        for n in (block or {}).get("nutrients") or []:
+    blocks = trade.get("nutritions") or []
+    for block in blocks if isinstance(blocks, list) else [blocks]:
+        for n in _obj(block).get("nutrients") or [] if isinstance(block, dict) else []:
             if isinstance(n, dict) and n.get("name") and n.get("value"):
                 nutrients.append({"name": str(n["name"]), "value": str(n["value"])})
-    unit = (price.get("unitInfo") or {})
-    unit_text = " ".join(x for x in (unit.get("description"), ((unit.get("price") or {}).get("formattedV2"))) if x) or None
+    unit = _obj(price.get("unitInfo"))
+    unit_text = " ".join(str(x) for x in (unit.get("description"), _obj(unit.get("price")).get("formattedV2")) if x) or None
     return {
         "product_id": p["id"],
         "title": p.get("title"),
@@ -1065,7 +1071,7 @@ def parse_product_graphql(data: dict | None, nutrition: dict | None = None) -> d
         "price": now if now is not None else was,
         "was": was if now is not None and was not in (None, now) else None,
         "unit_price": unit_text,
-        "bonus": (price.get("discount") or {}).get("description"),
+        "bonus": _obj(price.get("discount")).get("description"),
         "nutriscore": nutri,
         "image": image,
         "summary": p.get("summary"),
@@ -1074,7 +1080,7 @@ def parse_product_graphql(data: dict | None, nutrition: dict | None = None) -> d
         "diet": [_ICON_LABELS[i] for i in icons if i in _ICON_LABELS],
         "allergens": [],
         "ingredients": None,
-        "orderable": (p.get("availability") or {}).get("isOrderable"),
+        "orderable": _obj(p.get("availability")).get("isOrderable"),
     }
 
 

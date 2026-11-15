@@ -3,6 +3,9 @@
 Nieuwste bovenaan. Bij elke nieuwe versie: regel toevoegen, `version` in `manifest.json` ophogen en de README bijwerken zodat die alleen beschrijft wat er nú in zit.
 Newest first. For every release: add an entry, bump `version` in `manifest.json` and update the README so it only describes what is in the integration now.
 
+## 0.5.1
+- Productinformatie: bestand tegen lijsten waar AH één object stuurt (gaf een fout). Acties geven bij een onverwacht AH-antwoord een duidelijke melding.
+
 ## 0.5.0
 - Kassabon in detail: regels met productfoto's, kortingen en betaling van de laatste bon, eerdere bonnen, bespaard deze maand, uitgaven per maand; bon als PDF (bekijken of opslaan in een map).
 - Bezorging: verwachte aankomst (track & trace), *wijzigen tot*, minimumbedrag, factuur als PDF; optioneel vrije bezorgmomenten voor een zelf ingevuld adres.

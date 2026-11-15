@@ -1,6 +1,8 @@
 """Services: save/delete a recipe, put a recipe on the AH list."""
 from __future__ import annotations
 
+import logging
+
 import voluptuous as vol
 
 from homeassistant.core import HomeAssistant, ServiceCall, SupportsResponse
@@ -19,6 +21,8 @@ from .const import (
 )
 from .model import search_hit
 from .pdfs import async_save_pdf
+
+_LOGGER = logging.getLogger(__name__)
 
 SAVE = vol.Schema(
     {
@@ -96,6 +100,9 @@ async def _ah(coro):
         return await coro
     except AhError as err:
         raise HomeAssistantError(f"Albert Heijn gaf geen antwoord: {err}") from err
+    except (AttributeError, KeyError, TypeError, ValueError) as err:  # AH changed the shape of an answer
+        _LOGGER.debug("Unexpected answer from AH: %r", err)
+        raise HomeAssistantError("Albert Heijn gaf een onverwacht antwoord") from err
 
 
 def async_register_v05_services(hass: HomeAssistant) -> None:

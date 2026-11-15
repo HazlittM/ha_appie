@@ -135,6 +135,13 @@ assert gp["nutriscore"] == "B" and gp["diet"] == ["Vegetarisch"] and gp["image"]
 assert gp["was"] == 1.29 and gp["bonus"] == "2 voor 2,00" and gp["unit_price"] == "prijs per liter 1.00"
 assert gp["nutrients"] == [{"name": "Energie", "value": "200 kJ"}] and gp["gtin"] == "08710000000000"
 assert m.parse_product_graphql({"product": {"id": 1}})["image"] is None and m.parse_product_graphql(None) is None
+# AH sometimes sends lists where one object is expected: never crash
+gl = m.parse_product_graphql({"product": [{"id": 7, "title": "X", "priceV2": [{"now": {"amount": 2}, "discount": [], "unitInfo": [{"description": "per kg", "price": [{"formattedV2": "9.99"}]}]}],
+    "availability": [], "imagePack": [{"small": [{"url": "s"}]}], "icons": "NUTRISCORE_A"}]},
+    {"product": [{"tradeItem": [{"gtin": "1", "nutritions": {"nutrients": [{"name": "Vet", "value": "1 g"}]}}]}]})
+assert gl["product_id"] == 7 and gl["price"] == 2.0 and gl["unit_price"] == "per kg 9.99" and gl["image"] == "s"
+assert gl["bonus"] is None and gl["nutrients"] == [{"name": "Vet", "value": "1 g"}] and gl["gtin"] == "1"
+assert m.parse_product_graphql({"product": "x"}) is None and m.parse_product_graphql([1]) is None
 
 h = m.search_hit({"webshopId": 3, "title": "AH Thee", "currentPrice": 1.0, "priceBeforeBonus": 1.5, "isBonus": True,
                   "bonusMechanism": "1+1"})
