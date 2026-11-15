@@ -15,6 +15,10 @@ Een Home Assistant-integratie voor **Albert Heijn** die veel meer doet dan bezor
 - 🖼️ **Dashboardkaart:** een eigen kaart in AH-stijl met alles hierboven, zonder extra installatie.
 - 🛍️ **Overig:** winkelmand met totaal, inhoud van je bestelling, favorietenlijsten, productinformatie en barcode opzoeken.
 
+<table><tr><td><img src="docs/screenshots/card-list.png" width="200" alt="Lijst / List"></td><td><img src="docs/screenshots/card-delivery.png" width="200" alt="Bezorging / Delivery"></td><td><img src="docs/screenshots/card-receipts.png" width="200" alt="Bonnen / Receipts"></td><td><img src="docs/screenshots/card-store-dark.png" width="200" alt="Winkel / Store"></td></tr></table>
+
+*De ingebouwde dashboardkaart, met verzonnen voorbeelddata. Meer schermafbeeldingen (ook van de opties) staan in [`docs/screenshots`](docs/screenshots).*
+
 > ⚠️ **Onofficieel.** Albert Heijn heeft geen publieke API. Deze integratie gebruikt dezelfde API als de AH-app, alleen voor jouw eigen account (hij leest je bestellingen en schrijft alleen naar je boodschappenlijst en, als je dat vraagt, je favorietenlijst; bestellen, annuleren of Bonus activeren doet hij nooit). AH kan dit op elk moment wijzigen of blokkeren, en het gebruik kan tegen hun voorwaarden zijn. Gebruik op eigen risico. Niet verbonden met of goedgekeurd door Albert Heijn.
 
 > ℹ️ **Getest met een echte bezorging (13-11-2026):** de statussen `tijd_bekend` en `bezorgd`. Nog niet getest: `geannuleerd`. Let op: `tijd_bekend` komt al 's nachts, zodra het bezorgslot vaststaat, niet pas als de bezorger onderweg is. Sinds 0.5.0 leest *Verwachte aankomst* het aankomstvenster uit AH's track & trace; dat is nog niet met een echte bezorging getest.
@@ -158,6 +162,10 @@ A Home Assistant integration for **Albert Heijn** that does far more than delive
 - 💳 **Bonus card:** your bonus card as a barcode on the dashboard (optional).
 - 🖼️ **Dashboard card:** a built-in card in AH style with everything above, nothing extra to install.
 - 🛍️ **Also:** basket with total, order contents, favourite lists, product information and barcode lookup.
+
+<table><tr><td><img src="docs/screenshots/card-list.png" width="200" alt="Lijst / List"></td><td><img src="docs/screenshots/card-delivery.png" width="200" alt="Bezorging / Delivery"></td><td><img src="docs/screenshots/card-receipts.png" width="200" alt="Bonnen / Receipts"></td><td><img src="docs/screenshots/card-store-dark.png" width="200" alt="Winkel / Store"></td></tr></table>
+
+*The built-in dashboard card, with made-up sample data. More screenshots (including the options) are in [`docs/screenshots`](docs/screenshots).*
 
 > ⚠️ **Unofficial.** AH has no public API. This uses the same API as the AH app, for your own account only (it reads your orders and only writes to your shopping list and, when you ask, your favourite list; it never orders, cancels or activates Bonus). It can break or be blocked at any time and may be against AH's terms. Use at your own risk. Not affiliated with Albert Heijn.
 
