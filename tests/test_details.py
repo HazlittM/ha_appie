@@ -125,17 +125,16 @@ assert m.ean13_valid("4006381333931") and not m.ean13_valid("4006381333932") and
 print("details: favorieten/kaart-tests geslaagd")
 
 # ---- product details, search hits
-pd = m.parse_product_details({"productId": 5, "productCard": {"webshopId": 5, "title": "AH Voorbeeldmelk",
-    "salesUnitSize": "1 l", "priceBeforeBonus": 1.29, "isBonus": True, "bonusMechanism": "2 voor 2,00",
-    "images": [{"width": 400, "url": "p400"}]},
-    "properties": {"nutriscore": ["B"], "sp_include_dieet_vegetarisch": ["Vegetarisch"], "np_lokaal": ["x"]},
-    "tradeItem": {"gtin": "08710000000000", "foodAndBeverageIngredientStatement": "melk",
-                  "allergenInformation": [{"items": [
-                      {"typeCode": {"label": "Melk"}, "levelOfContainmentCode": {"value": "CONTAINS"}},
-                      {"typeCode": {"label": "Gluten"}, "levelOfContainmentCode": {"value": "FREE_FROM"}}, {}]}]}})
-assert pd["allergens"] == ["Melk"] and pd["free_from"] == ["Gluten"] and pd["diet"] == ["Vegetarisch"]
-assert pd["nutriscore"] == "B" and pd["price"] == 1.29 and pd["bonus"] == "2 voor 2,00" and pd["image"] == "p400"
-assert m.parse_product_details(None) is None and m.parse_product_details({"productCard": {}}) is None
+gp = m.parse_product_graphql({"product": {"id": 5, "title": "AH Voorbeeldmelk", "salesUnitSize": "1 l",
+    "icons": ["NUTRISCORE_B", "VEGETARIAN", "X"], "priceV2": {"now": {"amount": 1.0}, "was": {"amount": 1.29},
+    "unitInfo": {"description": "prijs per liter", "price": {"formattedV2": "1.00"}}, "discount": {"description": "2 voor 2,00"}},
+    "imagePack": {"medium": [{"url": "m"}], "small": {"url": "s"}}, "availability": {"isOrderable": True}}},
+    {"product": {"tradeItem": {"gtin": "08710000000000", "nutritions": [{"nutrients": [
+        {"name": "Energie", "value": "200 kJ"}, {"name": None}]}]}}})
+assert gp["nutriscore"] == "B" and gp["diet"] == ["Vegetarisch"] and gp["image"] == "m" and gp["price"] == 1.0
+assert gp["was"] == 1.29 and gp["bonus"] == "2 voor 2,00" and gp["unit_price"] == "prijs per liter 1.00"
+assert gp["nutrients"] == [{"name": "Energie", "value": "200 kJ"}] and gp["gtin"] == "08710000000000"
+assert m.parse_product_graphql({"product": {"id": 1}})["image"] is None and m.parse_product_graphql(None) is None
 
 h = m.search_hit({"webshopId": 3, "title": "AH Thee", "currentPrice": 1.0, "priceBeforeBonus": 1.5, "isBonus": True,
                   "bonusMechanism": "1+1"})

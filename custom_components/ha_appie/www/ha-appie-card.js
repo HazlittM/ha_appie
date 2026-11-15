@@ -52,7 +52,7 @@
       not_available: "Niet beschikbaar", loading: "Laden…", error: "Mislukt", no_results: "Niets gevonden.",
       states: { geen: "Geen bezorging", gepland: "Gepland", tijd_bekend: "Tijd bekend", bezorgd: "Bezorgd", geannuleerd: "Geannuleerd", onbekend: "Onbekend" },
       reload: "Nieuwe versie van de kaart: herlaad de pagina.", missing: "HA Appie is niet gevonden. Is de integratie ingesteld?",
-      allergens: "Bevat", product_info: "Productinfo",
+      allergens: "Bevat", product_info: "Productinfo", nutrition: "Voedingswaarde",
     },
     en: {
       tab_list: "List", tab_delivery: "Delivery", tab_bonus: "Bonus", tab_receipts: "Receipts",
@@ -79,7 +79,7 @@
       not_available: "Not available", loading: "Loading…", error: "Failed", no_results: "Nothing found.",
       states: { geen: "No delivery", gepland: "Planned", tijd_bekend: "Time known", bezorgd: "Delivered", geannuleerd: "Cancelled", onbekend: "Unknown" },
       reload: "New card version: reload the page.", missing: "HA Appie not found. Is the integration set up?",
-      allergens: "Contains", product_info: "Product info",
+      allergens: "Contains", product_info: "Product info", nutrition: "Nutrition",
     },
   };
   let LANG = "nl";
@@ -739,7 +739,7 @@
         const rows = e.regulars.map((id) => {
           const s = this._hass.states[id];
           const q = Number(s.state) || 0;
-          return `<div class="row"><div class="grow"><div class="name">${esc(s.attributes.friendly_name)}</div><div class="sub">${esc(s.attributes.besteld_in || "")}</div></div>
+          return `<div class="row"><div class="grow"><div class="name">${esc(String(s.attributes.friendly_name || "").replace(/^HA Appie\s+/, ""))}</div><div class="sub">${esc(s.attributes.besteld_in || "")}</div></div>
             <div class="stepper"><button data-a="reg" data-v="${esc(id)}|-1" aria-label="-">−</button><span>${q}</span><button data-a="reg" data-v="${esc(id)}|1" aria-label="+">+</button></div></div>`;
         }).join("");
         const addBtn = e["button.add_regulars"];
@@ -888,7 +888,7 @@
         const a = store.attributes;
         const open = store.state === "open";
         const todayKey = new Date().toLocaleDateString("sv-SE");
-        const hours = Object.entries(a.hours || {}).slice(0, 7);
+        const hours = Object.entries(a.hours || {}).filter(([d]) => d >= todayKey).slice(0, 7);
         parts.push(`<div class="hero"><div class="state">${icon(open ? "mdi:store-check" : "mdi:store-off")}${esc(a.store_name || "")}</div>
           <div><span class="badge ${open ? "ok" : ""}">${esc(open ? t("open") : t("closed"))}</span> ${a.opens_today ? `${esc(t("today"))} ${esc(a.opens_today)}–${esc(a.closes_today)}` : ""}</div>
           <div class="muted">${esc([a.street, a.city].filter(Boolean).join(", "))}</div></div>`);
@@ -941,7 +941,9 @@
           <div class="row"><div class="grow muted">${esc([p.size, p.unit_price].filter(Boolean).join(" · "))}</div>${price(p.price)}</div>
           ${p.nutriscore ? `<div><span class="badge">Nutri-Score ${esc(p.nutriscore)}</span> ${(p.diet || []).map((d) => `<span class="badge ok">${esc(d)}</span>`).join(" ")}</div>` : ""}
           ${(p.allergens || []).length ? `<div><b>${esc(t("allergens"))}:</b> ${esc(p.allergens.join(", "))}</div>` : ""}
-          ${p.ingredients ? `<div class="muted">${esc(p.ingredients)}</div>` : ""}`;
+          ${p.summary ? `<div class="muted">${esc(String(p.summary).replace(/<[^>]*>/g, " "))}</div>` : ""}
+          ${p.ingredients ? `<div class="muted">${esc(p.ingredients)}</div>` : ""}
+          ${(p.nutrients || []).length ? `<div class="section"><h3>${icon("mdi:nutrition")}${esc(t("nutrition"))}</h3><div class="list">${p.nutrients.map((n) => `<div class="row"><div class="grow">${esc(n.name)}</div><span>${esc(n.value)}</span></div>`).join("")}</div></div>` : ""}`;
       }
       return `<div class="modal-back"><div class="modal" role="dialog" aria-modal="true" aria-label="${esc(title)}"><div class="mhead"><div class="grow">${esc(title)}</div><button class="iconbtn" data-a="close" aria-label="${esc(t("close"))}">${icon("mdi:close")}</button></div><div class="mbody">${body}</div></div></div>`;
     }

@@ -37,7 +37,7 @@ from .model import (
     parse_favorite_lists,
     parse_member_cards,
     parse_order_details,
-    parse_product_details,
+    parse_product_graphql,
     parse_receipt_details,
     parse_recipe,
     parse_recipe_search,
@@ -131,6 +131,15 @@ RECIPE_QUERY = (
 RECIPE_SUGGESTIONS_QUERY = (
     "query Suggest($id: Int!) { recipeProductSuggestionsV2(options: { recipeId: $id }) { ingredient { completeText } "
     "productSuggestion { product { id title salesUnitSize } } } }"
+)
+PRODUCT_QUERY = (  # subset of the app's FetchProductDetails (replaced REST detail/v4/fir, 404 since 2026-11)
+    "query FetchProductDetails($productId: Int!) { product(id: $productId) { id title brand category summary icons "
+    "salesUnitSize priceV2 { now { amount } was { amount } unitInfo { description price { formattedV2 } } "
+    "discount { description } } availability { isOrderable } imagePack { medium { url } large { url } small { url } } } }"
+)
+NUTRITION_QUERY = (
+    "query FetchProduct($productId: Int!) { product(id: $productId) { id tradeItem { gtin "
+    "nutritions { nutrients { type name value } } } } }"
 )
 ORDER_PATH = "/mobile-services/order/v1/"
 PRODUCT_PATH = "/mobile-services/product/"
@@ -438,9 +447,13 @@ class AhClient:
         return parse_member_cards(await self._graphql(MEMBER_CARDS_QUERY))
 
     async def async_get_product_details(self, product_id: int) -> dict | None:
-        return parse_product_details(
-            await self._authed("GET", f"{PRODUCT_PATH}detail/v4/fir/{int(product_id)}", headers=WEBSHOP)
-        )
+        variables = {"productId": int(product_id)}
+        details = await self._graphql(PRODUCT_QUERY, variables)
+        try:
+            nutrition = await self._graphql(NUTRITION_QUERY, variables)
+        except AhApiError:
+            nutrition = None  # nutrition is a nice-to-have
+        return parse_product_graphql(details, nutrition)
 
     async def async_get_product_by_gtin(self, gtin: str) -> dict | None:
         if not re.fullmatch(r"[0-9]{8,14}", gtin or ""):

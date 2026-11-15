@@ -1024,40 +1024,57 @@ def ean13_valid(code: str) -> bool:
 
 # ---- product details and Allerhande
 
-def parse_product_details(data: dict | None) -> dict | None:
-    """Compact summary of /product/detail/v4/fir/<id> (only what a dashboard needs)."""
-    d = data if isinstance(data, dict) else {}
-    card = d.get("productCard") or {}
-    if not card:
+_ICON_LABELS = {
+    "VEGETARIAN": "Vegetarisch", "VEGAN": "Veganistisch", "GLUTEN_FREE": "Glutenvrij",
+    "LACTOSE_FREE": "Lactosevrij", "ORGANIC": "Biologisch", "LOCALLY_PRODUCED": "Lokaal",
+}
+
+
+def parse_product_graphql(data: dict | None, nutrition: dict | None = None) -> dict | None:
+    """GraphQL product(id) (the app's FetchProductDetails) -> a compact summary for dashboards."""
+    p = (data or {}).get("product")
+    if not isinstance(p, dict) or p.get("id") is None:
         return None
-    trade = d.get("tradeItem") or {}
-    allergens, free_from = [], []
-    for block in trade.get("allergenInformation") or []:
-        for item in (block or {}).get("items") or []:
-            label = ((item or {}).get("typeCode") or {}).get("label")
-            level = ((item or {}).get("levelOfContainmentCode") or {}).get("value")
-            if label and level == "CONTAINS":
-                allergens.append(label)
-            elif label and level == "FREE_FROM":
-                free_from.append(label)
-    props = d.get("properties") or {}
-    diet = sorted({v for k, vals in props.items() if k.startswith(("sp_include_dieet", "sp_exclude_intolerance"))
-                   for v in (vals or []) if isinstance(v, str)})
+    price = p.get("priceV2") or {}
+    now, was = _amount(price.get("now")), _amount(price.get("was"))
+    icons = [str(i) for i in p.get("icons") or [] if i]
+    nutri = next((i.split("_", 1)[1] for i in icons if i.startswith("NUTRISCORE_")), None)
+    pack = p.get("imagePack") or {}
+    image = None
+    for size in ("medium", "large", "small"):
+        rend = pack.get(size)
+        if isinstance(rend, list):
+            rend = rend[0] if rend else None
+        if isinstance(rend, dict) and rend.get("url"):
+            image = rend["url"]
+            break
+    trade = ((nutrition or {}).get("product") or {}).get("tradeItem") or {}
+    nutrients = []
+    for block in trade.get("nutritions") or []:
+        for n in (block or {}).get("nutrients") or []:
+            if isinstance(n, dict) and n.get("name") and n.get("value"):
+                nutrients.append({"name": str(n["name"]), "value": str(n["value"])})
+    unit = (price.get("unitInfo") or {})
+    unit_text = " ".join(x for x in (unit.get("description"), ((unit.get("price") or {}).get("formattedV2"))) if x) or None
     return {
-        "product_id": card.get("webshopId") or d.get("productId"),
-        "title": card.get("title"),
-        "brand": card.get("brand"),
-        "size": card.get("salesUnitSize"),
-        "price": _amount(card.get("currentPrice")) or _amount(card.get("priceBeforeBonus")),
-        "unit_price": card.get("unitPriceDescription"),
-        "bonus": card.get("bonusMechanism") if card.get("isBonus") else None,
-        "nutriscore": (props.get("nutriscore") or [None])[0],
-        "image": product_image(card, 400),
+        "product_id": p["id"],
+        "title": p.get("title"),
+        "brand": p.get("brand"),
+        "category": p.get("category"),
+        "size": p.get("salesUnitSize"),
+        "price": now if now is not None else was,
+        "was": was if now is not None and was not in (None, now) else None,
+        "unit_price": unit_text,
+        "bonus": (price.get("discount") or {}).get("description"),
+        "nutriscore": nutri,
+        "image": image,
+        "summary": p.get("summary"),
         "gtin": trade.get("gtin"),
-        "ingredients": trade.get("foodAndBeverageIngredientStatement"),
-        "allergens": allergens,
-        "free_from": free_from,
-        "diet": diet,
+        "nutrients": nutrients[:20],
+        "diet": [_ICON_LABELS[i] for i in icons if i in _ICON_LABELS],
+        "allergens": [],
+        "ingredients": None,
+        "orderable": (p.get("availability") or {}).get("isOrderable"),
     }
 
 
