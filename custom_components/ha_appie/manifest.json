@@ -1,12 +1,14 @@
 {
   "domain": "ha_appie",
   "name": "HA Appie",
+  "after_dependencies": ["lovelace"],
   "codeowners": ["@HazlittM"],
   "config_flow": true,
+  "dependencies": ["http"],
   "documentation": "https://github.com/HazlittM/ha_appie",
   "integration_type": "service",
   "iot_class": "cloud_polling",
   "issue_tracker": "https://github.com/HazlittM/ha_appie/issues",
   "requirements": [],
-  "version": "0.4.0"
+  "version": "0.5.0"
 }

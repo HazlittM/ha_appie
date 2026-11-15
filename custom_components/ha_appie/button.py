@@ -61,7 +61,6 @@ class AhRecipeButton(AhEntity, ButtonEntity):
     def __init__(self, runtime) -> None:
         super().__init__(runtime.extra, "recipe_add")
         self._runtime = runtime
-        self._attr_translation_key = None
         self._last: str | None = None
 
     @property

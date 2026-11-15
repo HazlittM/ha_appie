@@ -138,6 +138,9 @@ class ExtraData:
     bonus_previous: BonusSection = field(default_factory=lambda: BonusSection(0, []))
     regulars: list["RegularProduct"] = field(default_factory=list)
     known: dict[int, tuple[str, int]] = field(default_factory=dict)  # product_id -> (title, times ordered)
+    basket_total: float | None = None
+    basket_discount: float | None = None
+    personal_offers: list["BonusOffer"] | None = None  # None: v1/personal not available
 
 
 def _title(product: dict | None) -> str:
@@ -613,3 +616,511 @@ def apply_aliases(name: str, aliases: dict[str, str]) -> str:
         if f" {key} " in padded:
             return " ".join(f"{padded.replace(f' {key} ', f' {value} ', 1)}".split())
     return name
+
+
+# ------------------------------------------------------------- v0.5 details
+# Everything below parses optional extras. Each parser accepts None/garbage and
+# returns an empty result, so a changed or missing AH field never breaks setup.
+
+def _amount(value: Any) -> float | None:
+    """{amount: 1.23} / 1.23 / "1,23" -> 1.23 (None when absent)."""
+    if isinstance(value, dict):
+        value = value.get("amount")
+    if value is None or value == "" or isinstance(value, bool):
+        return None
+    try:
+        return round(float(str(value).replace(",", ".")), 2)
+    except (TypeError, ValueError):
+        return None
+
+
+def _dt(value: Any) -> datetime | None:
+    if not value:
+        return None
+    try:
+        return datetime.fromisoformat(str(value).replace("Z", "+00:00"))
+    except (TypeError, ValueError):
+        return None
+
+
+@dataclass(frozen=True)
+class ReceiptLine:
+    name: str
+    quantity: float
+    price: float | None  # per piece
+    amount: float | None  # line total
+    pos_id: int | None = None
+
+
+@dataclass(frozen=True)
+class ReceiptDetails:
+    id: str
+    lines: list[ReceiptLine]
+    discounts: list[tuple[str, float]]
+    payments: list[tuple[str, float]]
+
+    @property
+    def discount_total(self) -> float:
+        """AH reports discounts as negative or positive amounts; we count the saving."""
+        return round(sum(abs(a) for _, a in self.discounts), 2)
+
+    def as_dict(self) -> dict:
+        return {
+            "id": self.id,
+            "lines": [{"name": l.name, "quantity": l.quantity, "price": l.price, "amount": l.amount, "pos_id": l.pos_id}
+                      for l in self.lines],
+            "discounts": [list(d) for d in self.discounts],
+            "payments": [list(p) for p in self.payments],
+        }
+
+    @staticmethod
+    def from_dict(d: dict) -> "ReceiptDetails":
+        return ReceiptDetails(
+            str(d["id"]),
+            [ReceiptLine(l["name"], l["quantity"], l.get("price"), l.get("amount"), l.get("pos_id")) for l in d.get("lines", [])],
+            [(str(n), float(a)) for n, a in d.get("discounts", [])],
+            [(str(n), float(a)) for n, a in d.get("payments", [])],
+        )
+
+
+def parse_receipt_details(data: dict | None) -> ReceiptDetails | None:
+    r = (data or {}).get("posReceiptDetails")
+    if not isinstance(r, dict) or not r.get("id"):
+        return None
+    lines = []
+    for p in r.get("products") or []:
+        try:
+            name = str(p.get("name") or "").strip()
+            if not name:
+                continue
+            pid = p.get("id")
+            lines.append(ReceiptLine(name, float(p.get("quantity") or 1), _amount(p.get("price")),
+                                     _amount(p.get("amount")), int(pid) if pid not in (None, "") else None))
+        except (AttributeError, TypeError, ValueError):
+            continue
+    discounts = [(str(d.get("name") or "Korting"), a) for d in r.get("discounts") or []
+                 if isinstance(d, dict) and (a := _amount(d.get("amount"))) is not None]
+    payments = [(str(p.get("method") or "?"), a) for p in r.get("payments") or []
+                if isinstance(p, dict) and (a := _amount(p.get("amount"))) is not None]
+    return ReceiptDetails(str(r["id"]), lines, discounts, payments)
+
+
+def pdf_from_base64(raw: str | None) -> bytes | None:
+    """Decode a base64 PDF; None unless it really is a PDF."""
+    import base64
+    import binascii
+
+    if not raw or not isinstance(raw, str):
+        return None
+    try:
+        pdf = base64.b64decode(raw, validate=False)
+    except (binascii.Error, ValueError):
+        return None
+    return pdf if pdf.startswith(b"%PDF") else None
+
+
+def receipt_pdf_bytes(data: dict | None) -> bytes | None:
+    return pdf_from_base64(((data or {}).get("posReceiptPdf") or {}).get("pdfBase64"))
+
+
+def convert_query(pos_ids: list[int]) -> str:
+    """One GraphQL request mapping many receipt (POS) ids to webshop ids, via aliases."""
+    parts = [f"p{int(i)}: productConvertId(sourceId: {int(i)})" for i in pos_ids]
+    return "{ " + " ".join(parts) + " }"
+
+
+def parse_convert(data: dict | None) -> dict[int, int | None]:
+    """{"p767898": 4123} -> {767898: 4123}; -1 (no match) -> None."""
+    out: dict[int, int | None] = {}
+    for key, value in (data or {}).items():
+        if not str(key).startswith("p"):
+            continue
+        try:
+            pos = int(str(key)[1:])
+            web = int(value) if value is not None else -1
+        except (TypeError, ValueError):
+            continue
+        out[pos] = web if web > 0 else None
+    return out
+
+
+def product_image(product: dict | None, prefer: int = 200) -> str | None:
+    """Pick the image closest to `prefer` px from an AH product's images[]."""
+    imgs = [i for i in (product or {}).get("images") or [] if isinstance(i, dict) and i.get("url")]
+    if not imgs:
+        return None
+    def width(i):
+        try:
+            return int(i.get("width") or 0)
+        except (TypeError, ValueError):
+            return 0
+    return min(imgs, key=lambda i: abs(width(i) - prefer))["url"]
+
+
+def saved_in_month(details: list[ReceiptDetails], receipts: list[Receipt], year: int, month: int, tz) -> float:
+    when = {r.id: r.when.astimezone(tz) for r in receipts}
+    total = 0.0
+    for d in details:
+        w = when.get(d.id)
+        if w and w.year == year and w.month == month:
+            total += d.discount_total
+    return round(total, 2)
+
+
+def spent_per_month(receipts: list[Receipt], tz, months: int = 12) -> dict[str, float]:
+    """{"2026-11": 123.45, ...}, newest first, only paid receipts."""
+    out: dict[str, float] = {}
+    for r in receipts:
+        if r.amount <= 0:
+            continue
+        key = r.when.astimezone(tz).strftime("%Y-%m")
+        out[key] = round(out.get(key, 0.0) + r.amount, 2)
+    return dict(sorted(out.items(), reverse=True)[:months])
+
+
+# ---- personal bonus (v1/personal, with activation status)
+
+@dataclass(frozen=True)
+class BonusOffer:
+    title: str
+    discount: str | None
+    category: str | None
+    activated: bool | None  # None: not an activatable offer
+    price: float | None = None
+    was: float | None = None
+    product_id: int | None = None
+    image: str | None = None
+    end: str | None = None
+
+
+def _first_label(p: dict) -> str | None:
+    labels = p.get("discountLabels") or []
+    first = labels[0] if labels and isinstance(labels[0], dict) else {}
+    return first.get("defaultDescription")
+
+
+def parse_bonus_offers(data: dict | None) -> list[BonusOffer]:
+    out = []
+    for entry in (data or {}).get("bonusGroupOrProducts") or []:
+        if not isinstance(entry, dict):
+            continue
+        if isinstance(entry.get("product"), dict):
+            p = entry["product"]
+            status = p.get("activationStatus") or entry.get("activationStatus")
+            pid = p.get("webshopId")
+            out.append(BonusOffer(
+                _title(p), p.get("bonusMechanism") or _first_label(p), p.get("mainCategory"),
+                (status == "ACTIVATED") if status else None,
+                _amount(p.get("currentPrice")), _amount(p.get("priceBeforeBonus")),
+                int(pid) if pid is not None else None, product_image(p), p.get("bonusEndDate")))
+        elif isinstance(entry.get("bonusGroup"), dict):
+            g = entry["bonusGroup"]
+            status = g.get("activationStatus")
+            out.append(BonusOffer(
+                g.get("segmentDescription") or g.get("category") or "Bonus",
+                g.get("discountDescription") or _first_label(g), g.get("category"),
+                (status == "ACTIVATED") if status else None,
+                _amount(g.get("exampleForPrice")), _amount(g.get("exampleFromPrice")), None,
+                product_image(g), g.get("bonusEndDate")))
+    return out
+
+
+# ---- delivery details
+
+@dataclass(frozen=True)
+class OrderDetails:
+    order_id: int
+    closing_time: datetime | None
+    invoice_id: str | None
+    state: str | None
+    cancellable: bool | None
+    products: int
+
+
+def parse_order_details(data: dict | None) -> OrderDetails | None:
+    d = data if isinstance(data, dict) else {}
+    if d.get("orderId") is None:
+        return None
+    try:
+        oid = int(d["orderId"])
+    except (TypeError, ValueError):
+        return None
+    n = 0
+    for group in d.get("groupedProductsInTaxonomy") or []:
+        for p in (group or {}).get("orderedProducts") or []:
+            try:
+                n += int((p or {}).get("quantity") or 0)
+            except (TypeError, ValueError):
+                continue
+    inv = d.get("invoiceId")
+    return OrderDetails(oid, _dt(d.get("closingTime")), str(inv) if inv not in (None, "", 0) else None,
+                        d.get("orderState"), d.get("cancellable"), n)
+
+
+@dataclass(frozen=True)
+class TrackTrace:
+    type: str | None
+    message: str | None
+    eta_start: datetime | None
+    eta_end: datetime | None
+
+
+def parse_track_trace(data: dict | None) -> TrackTrace | None:
+    t = (((data or {}).get("order") or {}).get("delivery") or {}).get("trackAndTraceV2")
+    if isinstance(t, list):
+        t = t[0] if t else None
+    if not isinstance(t, dict):
+        return None
+    rng = (t.get("etaBlock") or {}).get("range") or {}
+    return TrackTrace(t.get("type"), t.get("message"), _dt(rng.get("start")), _dt(rng.get("end")))
+
+
+def parse_value_limits(data: dict | None) -> tuple[float | None, bool | None]:
+    v = (data or {}).get("orderValueLimits") or {}
+    return _amount(v.get("minimumOrderValue")), v.get("submittable")
+
+
+@dataclass(frozen=True)
+class Slot:
+    start: datetime
+    end: datetime
+    price: float | None
+    full: bool
+
+
+def parse_delivery_slots(data: dict | None) -> list[Slot]:
+    out = []
+    for day in (data or {}).get("orderDeliverySlots") or []:
+        if not isinstance(day, dict):
+            continue
+        for s in day.get("slots") or []:
+            if not isinstance(s, dict):
+                continue
+            start, end = _dt(s.get("startTime")), _dt(s.get("endTime"))
+            if start is None or end is None:
+                continue
+            charge = (s.get("serviceCharge") or {}).get("price")
+            out.append(Slot(start, end, _amount(charge), bool(s.get("isFullyBooked") or day.get("isFullyBooked"))))
+    return sorted(out, key=lambda s: s.start)
+
+
+# ---- stores and last chance
+
+@dataclass(frozen=True)
+class StoreInfo:
+    id: int
+    name: str
+    store_type: str | None
+    city: str | None
+    street: str | None
+    hours: dict[str, tuple[str, str] | None]  # iso date -> (open, close), None when closed
+
+
+def parse_store(store: dict | None) -> StoreInfo | None:
+    if not isinstance(store, dict) or store.get("id") is None:
+        return None
+    try:
+        sid = int(store["id"])
+    except (TypeError, ValueError):
+        return None
+    hours: dict[str, tuple[str, str] | None] = {}
+    flat = []
+    for d in store.get("openingDays") or []:  # live: a list of weeks (each a list of days); older docs: flat
+        flat.extend(d if isinstance(d, list) else [d])
+    for d in flat:
+        if not isinstance(d, dict) or not d.get("date"):
+            continue
+        oh = d.get("openingHour") or {}
+        hours[str(d["date"])[:10]] = (oh["openFrom"][:5], oh["openUntil"][:5]) if oh.get("openFrom") and oh.get("openUntil") else None
+    addr = store.get("address") or {}
+    street = " ".join(str(x) for x in (addr.get("street"), addr.get("houseNumber")) if x) or None
+    return StoreInfo(sid, str(store.get("name") or f"AH {sid}"), store.get("storeType"), addr.get("city"), street, hours)
+
+
+def store_open_state(store: StoreInfo, now: datetime) -> tuple[bool, str | None, str | None]:
+    """(open now, opens today, closes today) from the opening hours ("08:00"); `now` is local time."""
+    today = store.hours.get(now.date().isoformat())
+    if not today:
+        return False, None, None
+    hhmm = now.strftime("%H:%M")
+    return today[0] <= hhmm < today[1], today[0], today[1]
+
+
+@dataclass(frozen=True)
+class Bargain:
+    title: str
+    category: str | None
+    price_now: float | None
+    price_was: float | None
+    percentage: float | None
+    expires: str | None
+    stock: int | None
+    product_id: int | None
+
+
+def parse_bargains(data: dict | None) -> list[Bargain]:
+    out = []
+    for b in (data or {}).get("bargainItems") or []:
+        if not isinstance(b, dict):
+            continue
+        p = b.get("product") or {}
+        md = b.get("markdown") or {}
+        price = b.get("bargainPrice") or {}
+        pid = p.get("id")
+        try:
+            stock = int(b["stock"]) if b.get("stock") is not None else None
+        except (TypeError, ValueError):
+            stock = None
+        out.append(Bargain(_title(p), b.get("categoryTitle"), _amount(price.get("priceNow")), _amount(price.get("priceWas")),
+                           md.get("markdownPercentage"), md.get("markdownExpirationDate"), stock,
+                           int(pid) if pid is not None else None))
+    return out
+
+
+# ---- favourites and member cards
+
+@dataclass(frozen=True)
+class FavoriteList:
+    id: str
+    name: str
+    size: int
+    product_ids: list[int]
+
+
+def parse_favorite_lists(data: dict | None) -> list[FavoriteList]:
+    out = []
+    for f in (data or {}).get("favoriteListV2") or []:
+        if not isinstance(f, dict) or not f.get("id"):
+            continue
+        ids = []
+        for i in f.get("items") or []:
+            try:
+                ids.append(int(i["productId"]))
+            except (KeyError, TypeError, ValueError):
+                continue
+        try:
+            size = int(f.get("totalSize") if f.get("totalSize") is not None else len(ids))
+        except (TypeError, ValueError):
+            size = len(ids)
+        out.append(FavoriteList(str(f["id"]), str(f.get("description") or "Favorieten"), size, ids))
+    return out
+
+
+def parse_member_cards(data: dict | None) -> tuple[dict[str, str], list[str]]:
+    """({"bonus": "...", "airmiles": ..., "gall": ...} without empty values, memberships)."""
+    m = (data or {}).get("member") or {}
+    cards = {k: str(v) for k, v in (m.get("cards") or {}).items() if v and k in ("bonus", "airmiles", "gall")}
+    ms = [str(x) for x in m.get("memberships") or [] if x]
+    return cards, ms
+
+
+def ean13_valid(code: str) -> bool:
+    if not re.fullmatch(r"\d{13}", code or ""):
+        return False
+    digits = [int(c) for c in code]
+    check = (10 - sum(d * (3 if i % 2 else 1) for i, d in enumerate(digits[:12])) % 10) % 10
+    return check == digits[12]
+
+
+# ---- product details and Allerhande
+
+def parse_product_details(data: dict | None) -> dict | None:
+    """Compact summary of /product/detail/v4/fir/<id> (only what a dashboard needs)."""
+    d = data if isinstance(data, dict) else {}
+    card = d.get("productCard") or {}
+    if not card:
+        return None
+    trade = d.get("tradeItem") or {}
+    allergens, free_from = [], []
+    for block in trade.get("allergenInformation") or []:
+        for item in (block or {}).get("items") or []:
+            label = ((item or {}).get("typeCode") or {}).get("label")
+            level = ((item or {}).get("levelOfContainmentCode") or {}).get("value")
+            if label and level == "CONTAINS":
+                allergens.append(label)
+            elif label and level == "FREE_FROM":
+                free_from.append(label)
+    props = d.get("properties") or {}
+    diet = sorted({v for k, vals in props.items() if k.startswith(("sp_include_dieet", "sp_exclude_intolerance"))
+                   for v in (vals or []) if isinstance(v, str)})
+    return {
+        "product_id": card.get("webshopId") or d.get("productId"),
+        "title": card.get("title"),
+        "brand": card.get("brand"),
+        "size": card.get("salesUnitSize"),
+        "price": _amount(card.get("currentPrice")) or _amount(card.get("priceBeforeBonus")),
+        "unit_price": card.get("unitPriceDescription"),
+        "bonus": card.get("bonusMechanism") if card.get("isBonus") else None,
+        "nutriscore": (props.get("nutriscore") or [None])[0],
+        "image": product_image(card, 400),
+        "gtin": trade.get("gtin"),
+        "ingredients": trade.get("foodAndBeverageIngredientStatement"),
+        "allergens": allergens,
+        "free_from": free_from,
+        "diet": diet,
+    }
+
+
+def search_hit(h: dict) -> dict | None:
+    """One REST search/gtin product -> the small dict the card and services return."""
+    try:
+        pid, title = int(h["webshopId"]), str(h["title"])
+    except (KeyError, TypeError, ValueError):
+        return None
+    now, was = _amount(h.get("currentPrice")), _amount(h.get("priceBeforeBonus"))
+    return {
+        "product_id": pid,
+        "title": title,
+        "size": h.get("salesUnitSize"),
+        "price": now if now is not None else was,
+        "was": was if now is not None and was not in (None, now) else None,
+        "bonus": h.get("bonusMechanism") if h.get("isBonus") else None,
+        "unit_price": h.get("unitPriceDescription"),
+        "image": product_image(h),
+    }
+
+
+def parse_recipe_search(data: dict | None) -> list[dict]:
+    out = []
+    for r in ((data or {}).get("recipeSearchV2") or {}).get("result") or []:
+        if not isinstance(r, dict) or r.get("id") is None:
+            continue
+        img = next((i.get("url") for i in r.get("images") or [] if isinstance(i, dict) and i.get("url")), None)
+        out.append({"id": r["id"], "title": r.get("title"), "minutes": (r.get("time") or {}).get("cook"), "image": img})
+    return out
+
+
+def parse_recipe(data: dict | None) -> dict | None:
+    r = (data or {}).get("recipe")
+    if not isinstance(r, dict) or not r.get("title"):
+        return None
+    lines = [str(i.get("text")).strip() for i in r.get("ingredients") or [] if isinstance(i, dict) and i.get("text")]
+    img = next((i.get("url") for i in r.get("images") or [] if isinstance(i, dict) and i.get("url")), None)
+    servings = (r.get("servings") or {}).get("number")
+    return {
+        "id": r.get("id"),
+        "title": str(r["title"]).strip(),
+        "persons": int(servings) if isinstance(servings, (int, float)) and not isinstance(servings, bool) and servings > 0 else 4,
+        "ingredients": lines,
+        "minutes": r.get("cookTime"),
+        "url": f"https://www.ah.nl{r['href']}" if r.get("href") else None,
+        "image": img,
+        "steps": [s for s in (r.get("preparation") or {}).get("steps") or [] if isinstance(s, str)],
+    }
+
+
+def parse_recipe_suggestions(data: dict | None) -> dict[str, tuple[int, str, str | None]]:
+    """ingredient text -> (webshop id, title, pack size) that AH proposes for that line."""
+    out = {}
+    for s in (data or {}).get("recipeProductSuggestionsV2") or []:
+        if not isinstance(s, dict):
+            continue
+        ing = s.get("ingredient") or {}
+        prod = (s.get("productSuggestion") or {}).get("product") or {}
+        text = ing.get("completeText")
+        if text and prod.get("id") and prod.get("title"):
+            try:
+                out[str(text).strip()] = (int(prod["id"]), str(prod["title"]), prod.get("salesUnitSize"))
+            except (TypeError, ValueError):
+                continue
+    return out

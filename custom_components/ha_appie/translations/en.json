@@ -65,6 +65,34 @@
       },
       "bonus_previous": {
         "name": "Bonus on previously bought"
+      },
+      "delivery_eta": {
+        "name": "Expected arrival"
+      },
+      "order_closing_time": {
+        "name": "Order can be changed until"
+      },
+      "saved_month": {
+        "name": "Saved in store this month"
+      },
+      "store": {
+        "name": "Favourite store",
+        "state": {
+          "open": "Open",
+          "closed": "Closed"
+        }
+      },
+      "bargains": {
+        "name": "Last chance"
+      },
+      "favorites": {
+        "name": "Favourites"
+      },
+      "bonus_card": {
+        "name": "Bonus card"
+      },
+      "next_free_slot": {
+        "name": "First free delivery slot"
       }
     },
     "event": {
@@ -135,6 +163,188 @@
         "persons": {
           "name": "Persons",
           "description": "Empty = the configured number"
+        }
+      }
+    },
+    "save_receipt_pdf": {
+      "name": "Save receipt as PDF",
+      "description": "Saves an in-store receipt as a PDF in a folder (default /media/ha_appie).",
+      "fields": {
+        "id": {
+          "name": "Receipt",
+          "description": "Receipt id, or 'latest'"
+        },
+        "folder": {
+          "name": "Folder",
+          "description": "An allowed folder, e.g. /media/ha_appie"
+        }
+      }
+    },
+    "save_invoice_pdf": {
+      "name": "Save invoice as PDF",
+      "description": "Saves the invoice of a delivered order as a PDF.",
+      "fields": {
+        "id": {
+          "name": "Order",
+          "description": "Order number, or 'latest'"
+        },
+        "folder": {
+          "name": "Folder",
+          "description": "An allowed folder, e.g. /media/ha_appie"
+        }
+      }
+    },
+    "get_receipt": {
+      "name": "Get receipt",
+      "description": "Returns the lines, discounts and payments of a receipt.",
+      "fields": {
+        "id": {
+          "name": "Receipt",
+          "description": "Receipt id, or 'latest'"
+        }
+      }
+    },
+    "product_details": {
+      "name": "Product information",
+      "description": "Ingredients, allergens, Nutri-Score and price of an AH product (by product id or barcode).",
+      "fields": {
+        "product_id": {
+          "name": "Product id",
+          "description": "AH product id (webshopId)"
+        },
+        "barcode": {
+          "name": "Barcode",
+          "description": "EAN/GTIN on the package"
+        }
+      }
+    },
+    "search_products": {
+      "name": "Search products",
+      "description": "Searches AH products and returns them with price, bonus and photo.",
+      "fields": {
+        "query": {
+          "name": "Search",
+          "description": "For example 'semi-skimmed milk'"
+        },
+        "limit": {
+          "name": "Number",
+          "description": "Maximum number of results"
+        }
+      }
+    },
+    "add_product": {
+      "name": "Product to shopping list",
+      "description": "Puts an AH product on your list; if it is already there the quantity is added.",
+      "fields": {
+        "product_id": {
+          "name": "Product id",
+          "description": "AH product id"
+        },
+        "title": {
+          "name": "Name",
+          "description": "Optional"
+        },
+        "quantity": {
+          "name": "Quantity",
+          "description": "How many to add"
+        }
+      }
+    },
+    "search_recipes": {
+      "name": "Search Allerhande recipes",
+      "description": "Searches recipes on Allerhande.",
+      "fields": {
+        "query": {
+          "name": "Search",
+          "description": "For example 'pasta pesto'"
+        },
+        "limit": {
+          "name": "Number",
+          "description": "Maximum number of results"
+        }
+      }
+    },
+    "get_recipe": {
+      "name": "Show Allerhande recipe",
+      "description": "Returns the ingredients and steps of an Allerhande recipe.",
+      "fields": {
+        "recipe_id": {
+          "name": "Recipe id",
+          "description": "Id from 'Search Allerhande recipes'"
+        }
+      }
+    },
+    "import_recipe": {
+      "name": "Import Allerhande recipe",
+      "description": "Saves an Allerhande recipe as your own recipe, with the products AH proposes pinned.",
+      "fields": {
+        "recipe_id": {
+          "name": "Recipe id",
+          "description": "Id from 'Search Allerhande recipes'"
+        },
+        "name": {
+          "name": "Name",
+          "description": "Optional: your own name"
+        }
+      }
+    },
+    "add_to_favorites": {
+      "name": "Add to favourites",
+      "description": "Puts a product on a favourite list in the AH app.",
+      "fields": {
+        "product_id": {
+          "name": "Product id",
+          "description": "AH product id"
+        },
+        "list": {
+          "name": "List",
+          "description": "List name; empty = the first"
+        }
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "HA Appie options",
+        "description": "Switch parts on or off. Saving reloads the integration. Parts AH does not provide (yet) become unavailable and break nothing.",
+        "sections": {
+          "features": {
+            "name": "Parts",
+            "description": "Everything is on by default, except the bonus card (personal).",
+            "data": {
+              "receipt_details": "Receipt details (lines, discounts, saved)",
+              "receipt_images": "Product photos on receipt lines",
+              "delivery_details": "Delivery details (arrival time, change until, minimum order, invoice)",
+              "personal_bonus": "Personal bonus with prices and status",
+              "store": "Favourite store and opening hours",
+              "bargains": "Last chance in that store",
+              "favorites": "Favourite lists",
+              "member_cards": "Bonus card (barcode on the card)",
+              "allerhande": "Search and import Allerhande recipes",
+              "product_info": "Product information and barcode lookup",
+              "lovelace_card": "Register the dashboard card"
+            }
+          },
+          "store_section": {
+            "name": "Store",
+            "description": "0 = your favourite store from the AH app. Or enter an AH store number.",
+            "data": {
+              "store_id": "Store number"
+            }
+          },
+          "slots_section": {
+            "name": "Free delivery slots",
+            "description": "Optional. The integration never reads your address from AH; enter it here yourself. It is only sent to api.ah.nl to look up free slots.",
+            "data": {
+              "delivery_slots": "Fetch free delivery slots",
+              "street": "Street",
+              "house_number": "House number",
+              "house_number_extra": "Addition",
+              "postal_code": "Postal code",
+              "city": "City"
+            }
+          }
         }
       }
     }

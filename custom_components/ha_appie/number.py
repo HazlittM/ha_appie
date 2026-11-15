@@ -86,7 +86,6 @@ class AhRecipePersons(AhEntity, NumberEntity):
     def __init__(self, runtime) -> None:
         super().__init__(runtime.extra, "recipe_persons")
         self._recipes = runtime.recipes
-        self._attr_translation_key = None
 
     async def async_added_to_hass(self) -> None:
         await super().async_added_to_hass()

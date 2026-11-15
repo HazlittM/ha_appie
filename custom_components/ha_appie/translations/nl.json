@@ -65,6 +65,34 @@
       },
       "bonus_previous": {
         "name": "Bonus op eerder gekocht"
+      },
+      "delivery_eta": {
+        "name": "Verwachte aankomst"
+      },
+      "order_closing_time": {
+        "name": "Bestelling wijzigen tot"
+      },
+      "saved_month": {
+        "name": "Bespaard in winkel deze maand"
+      },
+      "store": {
+        "name": "Favoriete winkel",
+        "state": {
+          "open": "Open",
+          "closed": "Dicht"
+        }
+      },
+      "bargains": {
+        "name": "Laatste kans"
+      },
+      "favorites": {
+        "name": "Favorieten"
+      },
+      "bonus_card": {
+        "name": "Bonuskaart"
+      },
+      "next_free_slot": {
+        "name": "Eerste vrije bezorgmoment"
       }
     },
     "event": {
@@ -135,6 +163,188 @@
         "persons": {
           "name": "Personen",
           "description": "Leeg = het ingestelde aantal"
+        }
+      }
+    },
+    "save_receipt_pdf": {
+      "name": "Kassabon als PDF opslaan",
+      "description": "Slaat een kassabon als PDF op in een map (standaard /media/ha_appie).",
+      "fields": {
+        "id": {
+          "name": "Bon",
+          "description": "Bon-id, of 'latest' voor de laatste bon"
+        },
+        "folder": {
+          "name": "Map",
+          "description": "Toegestane map, bv. /media/ha_appie"
+        }
+      }
+    },
+    "save_invoice_pdf": {
+      "name": "Factuur als PDF opslaan",
+      "description": "Slaat de factuur van een bezorgde bestelling op als PDF.",
+      "fields": {
+        "id": {
+          "name": "Bestelling",
+          "description": "Bestelnummer, of 'latest' voor de laatste factuur"
+        },
+        "folder": {
+          "name": "Map",
+          "description": "Toegestane map, bv. /media/ha_appie"
+        }
+      }
+    },
+    "get_receipt": {
+      "name": "Kassabon ophalen",
+      "description": "Geeft de regels, kortingen en betalingen van een kassabon terug.",
+      "fields": {
+        "id": {
+          "name": "Bon",
+          "description": "Bon-id, of 'latest'"
+        }
+      }
+    },
+    "product_details": {
+      "name": "Productinformatie",
+      "description": "Ingrediënten, allergenen, Nutri-Score en prijs van een AH-product (op product-id of barcode).",
+      "fields": {
+        "product_id": {
+          "name": "Product-id",
+          "description": "AH-product-id (webshopId)"
+        },
+        "barcode": {
+          "name": "Barcode",
+          "description": "EAN/GTIN van de verpakking"
+        }
+      }
+    },
+    "search_products": {
+      "name": "Producten zoeken",
+      "description": "Zoekt AH-producten en geeft ze terug met prijs, bonus en foto.",
+      "fields": {
+        "query": {
+          "name": "Zoekwoord",
+          "description": "Bijvoorbeeld 'halfvolle melk'"
+        },
+        "limit": {
+          "name": "Aantal",
+          "description": "Maximaal aantal resultaten"
+        }
+      }
+    },
+    "add_product": {
+      "name": "Product op boodschappenlijst",
+      "description": "Zet een AH-product op je lijst; staat het er al, dan wordt het aantal opgeteld.",
+      "fields": {
+        "product_id": {
+          "name": "Product-id",
+          "description": "AH-product-id"
+        },
+        "title": {
+          "name": "Naam",
+          "description": "Optioneel"
+        },
+        "quantity": {
+          "name": "Aantal",
+          "description": "Hoeveel erbij"
+        }
+      }
+    },
+    "search_recipes": {
+      "name": "Allerhande-recepten zoeken",
+      "description": "Zoekt recepten op Allerhande.",
+      "fields": {
+        "query": {
+          "name": "Zoekwoord",
+          "description": "Bijvoorbeeld 'pasta pesto'"
+        },
+        "limit": {
+          "name": "Aantal",
+          "description": "Maximaal aantal resultaten"
+        }
+      }
+    },
+    "get_recipe": {
+      "name": "Allerhande-recept bekijken",
+      "description": "Geeft ingrediënten en bereiding van een Allerhande-recept terug.",
+      "fields": {
+        "recipe_id": {
+          "name": "Recept-id",
+          "description": "Id uit 'Allerhande-recepten zoeken'"
+        }
+      }
+    },
+    "import_recipe": {
+      "name": "Allerhande-recept overnemen",
+      "description": "Slaat een Allerhande-recept op als eigen recept, met de producten die AH erbij voorstelt vastgezet.",
+      "fields": {
+        "recipe_id": {
+          "name": "Recept-id",
+          "description": "Id uit 'Allerhande-recepten zoeken'"
+        },
+        "name": {
+          "name": "Naam",
+          "description": "Optioneel: eigen naam"
+        }
+      }
+    },
+    "add_to_favorites": {
+      "name": "Aan favorieten toevoegen",
+      "description": "Zet een product op een favorietenlijst in de AH-app.",
+      "fields": {
+        "product_id": {
+          "name": "Product-id",
+          "description": "AH-product-id"
+        },
+        "list": {
+          "name": "Lijst",
+          "description": "Naam van de lijst; leeg = de eerste"
+        }
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "HA Appie-opties",
+        "description": "Zet onderdelen aan of uit. Na opslaan herlaadt de integratie. Onderdelen die AH (nog) niet levert, worden 'niet beschikbaar' en breken niets.",
+        "sections": {
+          "features": {
+            "name": "Onderdelen",
+            "description": "Alles staat standaard aan, behalve de bonuskaart (persoonlijk).",
+            "data": {
+              "receipt_details": "Kassabon in detail (regels, kortingen, bespaard)",
+              "receipt_images": "Productfoto's bij bonregels",
+              "delivery_details": "Bezorgdetails (aankomsttijd, wijzigen tot, minimumbedrag, factuur)",
+              "personal_bonus": "Persoonlijke bonus met prijzen en status",
+              "store": "Favoriete winkel en openingstijden",
+              "bargains": "Laatste kans in die winkel",
+              "favorites": "Favorietenlijsten",
+              "member_cards": "Bonuskaart (barcode op de kaart)",
+              "allerhande": "Allerhande-recepten zoeken en overnemen",
+              "product_info": "Productinformatie en barcode opzoeken",
+              "lovelace_card": "Dashboardkaart registreren"
+            }
+          },
+          "store_section": {
+            "name": "Winkel",
+            "description": "0 = je favoriete winkel uit de AH-app. Of vul een AH-winkelnummer in.",
+            "data": {
+              "store_id": "Winkelnummer"
+            }
+          },
+          "slots_section": {
+            "name": "Vrije bezorgmomenten",
+            "description": "Optioneel. De integratie leest je adres nooit bij AH; vul het hier zelf in. Het wordt alleen naar api.ah.nl gestuurd om vrije momenten op te vragen.",
+            "data": {
+              "delivery_slots": "Vrije bezorgmomenten ophalen",
+              "street": "Straat",
+              "house_number": "Huisnummer",
+              "house_number_extra": "Toevoeging",
+              "postal_code": "Postcode",
+              "city": "Plaats"
+            }
+          }
         }
       }
     }
